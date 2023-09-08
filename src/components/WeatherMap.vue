@@ -4,12 +4,15 @@ import axios from 'axios';
 import {Button as AButton, FormItem as AFormItem, Form as AForm, Input as AInput,
   Table as ATable, DatePicker as ADatePicker} from "ant-design-vue";
 import moment from 'moment';
+import * as response from "autoprefixer";
 const cityName = ref('');
 const startDate = ref('');
 const endDate = ref('');
 const result = ref(null);
 const polDataSource = ref([]);
 const showTable = ref(false);
+const errorMessage = ref('');
+const showErrorModal = ref(false);
 const columns = ref([
   { title: 'Date', dataIndex: 'date', key: 'date' },
   { title: 'CO', dataIndex: 'co', key: 'co' },
@@ -18,8 +21,8 @@ const columns = ref([
 ]);
 const fetchResults = async () => {
   const url = `http://localhost:8080/api/pollutions`;
-  const formattedStartDate = moment(startDate.value.toString()).format('YYYY-MM-DD');
-  const formattedEndDate = moment(endDate.value.toString()).format('YYYY-MM-DD');
+  const formattedStartDate = startDate.value ? moment(startDate.value.toString()).format('YYYY-MM-DD') : '';
+  const formattedEndDate = endDate.value ? moment(endDate.value.toString()).format('YYYY-MM-DD') : '';
   const params = {
     cityName: cityName.value,
     start: formattedStartDate,
@@ -44,6 +47,8 @@ const fetchResults = async () => {
     showTable.value = true;
   } catch (error) {
     console.error('Error fetching data:', error);
+    errorMessage.value = 'Error fetching data: ' + error.response.data;
+    showErrorModal.value = true;
     result.value = null;
   }
 };
@@ -102,7 +107,12 @@ const getColorClass = (value) => {
         </template>
       </a-table>
     </div>
-
+    <a-modal v-model:visible="showErrorModal" title="Error">
+      <p>{{ errorMessage }}</p>
+      <template #footer>
+        <a-button type="primary" @click="showErrorModal = false">OK</a-button>
+      </template>
+    </a-modal>
   </div>
 </template>
 
@@ -138,5 +148,9 @@ const getColorClass = (value) => {
 
 .text-black {
   color: black;
+}
+.error-message {
+  color: red;
+  margin-top: 10px;
 }
 </style>
